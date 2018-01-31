@@ -1,9 +1,11 @@
 package main
 
 import (
+	gocontext "context"
 	"fmt"
 	"os"
 
+	"github.com/llitfkitfk/containerd/log"
 	"github.com/llitfkitfk/containerd/server"
 	"github.com/llitfkitfk/containerd/version"
 	"github.com/sirupsen/logrus"
@@ -41,17 +43,24 @@ func main() {
 	app.Commands = []cli.Command{}
 	app.Action = func(context *cli.Context) error {
 
-		var config = defaultConfig()
-
+		var (
+			ctx    = log.WithModule(gocontext.Background(), "containerd")
+			config = defaultConfig()
+		)
 		if err := server.LoadConfig(context.GlobalString("config"), config); err != nil && !os.IsNotExist(err) {
 			return err
 		}
-		
+
 		// apply flags to the config
 		if err := applyFlags(context, config); err != nil {
 			return err
 		}
-		
+
+		log.G(ctx).WithFields(logrus.Fields{
+			"version":  version.Version,
+			"revision": version.Revision,
+		}).Info("starting containerd")
+
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
