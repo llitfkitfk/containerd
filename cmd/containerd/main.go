@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/llitfkitfk/containerd/server"
 	"github.com/llitfkitfk/containerd/version"
 	"github.com/urfave/cli"
 )
@@ -17,6 +18,12 @@ const usage = `
 
 high performance container runtime
 `
+
+func init() {
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Println(c.App.Name, version.Package, c.App.Version, version.Revision)
+	}
+}
 
 func main() {
 	app := cli.NewApp()
@@ -32,6 +39,12 @@ func main() {
 	}
 	app.Commands = []cli.Command{}
 	app.Action = func(context *cli.Context) error {
+
+		var config = defaultConfig()
+
+		if err := server.LoadConfig(context.GlobalString("config"), config); err != nil && !os.IsNotExist(err) {
+			return err
+		}
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
