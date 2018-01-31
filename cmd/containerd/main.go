@@ -4,6 +4,8 @@ import (
 	gocontext "context"
 	"fmt"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/llitfkitfk/containerd/log"
 	"github.com/llitfkitfk/containerd/server"
@@ -44,9 +46,18 @@ func main() {
 	app.Action = func(context *cli.Context) error {
 
 		var (
-			ctx    = log.WithModule(gocontext.Background(), "containerd")
-			config = defaultConfig()
+			start   = time.Now()
+			signals = make(chan os.Signal, 2048)
+			serverC = make(chan *server.Server)
+			ctx     = log.WithModule(gocontext.Background(), "containerd")
+			config  = defaultConfig()
 		)
+
+		done := handleSignals(ctx, signals, serverC)
+		// start the signal handler as soon as we can to make sure that
+		// we don't miss any signals during boot
+		signal.Notify(signals, handledSignals...)
+
 		if err := server.LoadConfig(context.GlobalString("config"), config); err != nil && !os.IsNotExist(err) {
 			return err
 		}
@@ -61,6 +72,14 @@ func main() {
 			"revision": version.Revision,
 		}).Info("starting containerd")
 
+		server, err := server.New(ctx, config)
+		if err != nil {
+			return err
+		}
+		serverC <- server
+
+		log.G(ctx).Infof("containerd successfully booted in %fs", time.Since(start).Seconds())
+		<-done
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
