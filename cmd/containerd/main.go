@@ -10,6 +10,7 @@ import (
 	"github.com/llitfkitfk/containerd/log"
 	"github.com/llitfkitfk/containerd/server"
 	"github.com/llitfkitfk/containerd/version"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -66,7 +67,10 @@ func main() {
 		if err := applyFlags(context, config); err != nil {
 			return err
 		}
-
+		address := config.GRPC.Address
+		if address == "" {
+			return errors.New("grpc address cannot be empty")
+		}
 		log.G(ctx).WithFields(logrus.Fields{
 			"version":  version.Version,
 			"revision": version.Revision,
