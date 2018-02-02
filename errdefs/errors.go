@@ -11,4 +11,6 @@ import "github.com/pkg/errors"
 // map very well to those defined by grpc.
 var (
 	ErrInvalidArgument = errors.New("invalid argument")
+	ErrNotFound        = errors.New("not found")
+	ErrAlreadyExists   = errors.New("already exists")
 )

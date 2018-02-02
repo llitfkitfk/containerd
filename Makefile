@@ -40,7 +40,7 @@ bin/%: cmd/% FORCE
 	@echo "$(WHALE) $@${BINARY_SUFFIX}"
 	@go build -o $@${BINARY_SUFFIX} ${GO_LDFLAGS} ${GO_TAGS} ${GO_GCFLAGS} ./$<
 
-bin/sock2http: cmd/containerd/sock2http FORCE # set !cgo
+bin/sock2http: cmd/sock2http FORCE # set !cgo
 	@echo "$(WHALE) bin/sock2http"
 	@CGO_ENABLED=0 go build -o bin/sock2http ./$<
 

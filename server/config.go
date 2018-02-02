@@ -55,6 +55,18 @@ type CgroupConfig struct {
 	Path string `toml:"path"`
 }
 
+// Decode unmarshals a plugin specific configuration by plugin id
+func (c *Config) Decode(id string, v interface{}) (interface{}, error) {
+	data, ok := c.Plugins[id]
+	if !ok {
+		return v, nil
+	}
+	if err := c.md.PrimitiveDecode(data, v); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 // LoadConfig loads the containerd server config from the provided path
 func LoadConfig(path string, v *Config) error {
 	if v == nil {
