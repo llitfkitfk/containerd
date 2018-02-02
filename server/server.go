@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	metrics "github.com/docker/go-metrics"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/llitfkitfk/containerd/content/local"
 	"github.com/llitfkitfk/containerd/events/exchange"
@@ -112,6 +113,13 @@ func loadPlugins(config *Config) ([]*plugin.Registration, error) {
 		},
 	})
 	return nil, nil
+}
+
+// ServeMetrics provides a prometheus endpoint for exposing metrics
+func (s *Server) ServeMetrics(l net.Listener) error {
+	m := http.NewServeMux()
+	m.Handle("/v1/metrics", metrics.Handler())
+	return trapClosedConnErr(http.Serve(l, m))
 }
 
 // ServeDebug provides a debug endpoint

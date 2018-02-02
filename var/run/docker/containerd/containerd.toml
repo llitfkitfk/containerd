@@ -15,7 +15,7 @@ oom_score = -500
   level = "info"
 
 [metrics]
-  address = ""
+  address = ":8085"
 
 [cgroup]
   path = ""

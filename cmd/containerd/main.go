@@ -91,6 +91,13 @@ func main() {
 			}
 			serve(log.WithModule(ctx, "debug"), l, server.ServeDebug)
 		}
+		if config.Metrics.Address != "" {
+			l, err := net.Listen("tcp", config.Metrics.Address)
+			if err != nil {
+				return errors.Wrapf(err, "failed to get listener for metrics endpoint")
+			}
+			serve(log.WithModule(ctx, "metrics"), l, server.ServeMetrics)
+		}
 		log.G(ctx).Infof("containerd successfully booted in %fs", time.Since(start).Seconds())
 		<-done
 		return nil
