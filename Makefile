@@ -14,14 +14,14 @@ PKG=github.com/llitfkitfk/containerd
 
 PACKAGES=$(shell go list ./... | grep -v /vendor/)
 
-COMMANDS=containerd
+COMMANDS=containerd sock2http
 BINARIES=$(addprefix bin/,$(COMMANDS))
 
 GO_TAGS=$(if $(BUILDTAGS),-tags "$(BUILDTAGS)",)
 GO_LDFLAGS=-ldflags '-s -w -X $(PKG)/version.Version=$(VERSION) -X $(PKG)/version.Revision=$(REVISION) -X $(PKG)/version.Package=$(PKG) $(EXTRA_LDFLAGS)'
 GO_GCFLAGS=
 
-.PHONY: clean vendor build binaries
+.PHONY: clean vendor build binaries run http
 
 all: binaries
 
@@ -40,6 +40,17 @@ bin/%: cmd/% FORCE
 	@echo "$(WHALE) $@${BINARY_SUFFIX}"
 	@go build -o $@${BINARY_SUFFIX} ${GO_LDFLAGS} ${GO_TAGS} ${GO_GCFLAGS} ./$<
 
+bin/sock2http: cmd/containerd/sock2http FORCE # set !cgo
+	@echo "$(WHALE) bin/sock2http"
+	@CGO_ENABLED=0 go build -o bin/sock2http ./$<
+
+
 
 binaries: $(BINARIES) ## build binaries
 	@echo "$(WHALE) $@"
+
+run: binaries
+	./bin/containerd --config ./var/run/docker/containerd/containerd.toml
+
+sock2http:
+	@./bin/sock2http -h ./var/run/docker/containerd/docker-containerd-debug.sock

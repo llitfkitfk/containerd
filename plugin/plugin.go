@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -22,6 +23,8 @@ type Type string
 func (t Type) String() string { return string(t) }
 
 const (
+	// SnapshotPlugin implements a snapshotter
+	SnapshotPlugin Type = "io.containerd.snapshotter.v1"
 	// MetadataPlugin implements a metadata store
 	MetadataPlugin Type = "io.containerd.metadata.v1"
 	// ContentPlugin implements a content store
@@ -48,6 +51,11 @@ type Registration struct {
 // URI returns the full plugin URI
 func (r *Registration) URI() string {
 	return fmt.Sprintf("%s.%s", r.Type, r.ID)
+}
+
+// Service allows GRPC services to be registered with the underlying server
+type Service interface {
+	Register(*grpc.Server) error
 }
 
 var register = struct {

@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	gocontext "context"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/llitfkitfk/containerd/log"
 	"github.com/llitfkitfk/containerd/server"
+	"github.com/llitfkitfk/containerd/sys"
 	"github.com/llitfkitfk/containerd/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -81,7 +84,13 @@ func main() {
 			return err
 		}
 		serverC <- server
-
+		if config.Debug.Address != "" {
+			l, err := sys.GetLocalListener(config.Debug.Address, config.Debug.UID, config.Debug.GID)
+			if err != nil {
+				return errors.Wrapf(err, "failed to get listener for debug endpoint")
+			}
+			serve(log.WithModule(ctx, "debug"), l, server.ServeDebug)
+		}
 		log.G(ctx).Infof("containerd successfully booted in %fs", time.Since(start).Seconds())
 		<-done
 		return nil
@@ -90,6 +99,17 @@ func main() {
 		fmt.Fprintf(os.Stderr, "containerd: %s\n", err)
 		os.Exit(1)
 	}
+}
+
+func serve(ctx context.Context, l net.Listener, serveFunc func(net.Listener) error) {
+	path := l.Addr().String()
+	log.G(ctx).WithField("address", path).Info("serving...")
+	go func() {
+		defer l.Close()
+		if err := serveFunc(l); err != nil {
+			log.G(ctx).WithError(err).WithField("address", path).Fatal("serve failure")
+		}
+	}()
 }
 
 func applyFlags(context *cli.Context, config *server.Config) error {
