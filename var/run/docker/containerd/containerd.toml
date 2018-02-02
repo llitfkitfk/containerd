@@ -5,8 +5,8 @@ oom_score = -500
 
 [grpc]
   address = "./var/run/docker/containerd/docker-containerd.sock"
-  uid = 0
-  gid = 0
+  uid = 501
+  gid = 20
 
 [debug]
   address = "./var/run/docker/containerd/docker-containerd-debug.sock"

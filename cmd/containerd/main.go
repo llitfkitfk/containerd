@@ -98,6 +98,13 @@ func main() {
 			}
 			serve(log.WithModule(ctx, "metrics"), l, server.ServeMetrics)
 		}
+
+		l, err := sys.GetLocalListener(address, config.GRPC.UID, config.GRPC.GID)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get listener for main endpoint")
+		}
+		serve(log.WithModule(ctx, "grpc"), l, server.ServeGRPC)
+
 		log.G(ctx).Infof("containerd successfully booted in %fs", time.Since(start).Seconds())
 		<-done
 		return nil

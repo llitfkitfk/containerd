@@ -115,6 +115,15 @@ func loadPlugins(config *Config) ([]*plugin.Registration, error) {
 	return nil, nil
 }
 
+// ServeGRPC provides the containerd grpc APIs on the provided listener
+func (s *Server) ServeGRPC(l net.Listener) error {
+	// before we start serving the grpc API regster the grpc_prometheus metrics
+	// handler.  This needs to be the last service registered so that it can collect
+	// metrics for every other service
+	grpc_prometheus.Register(s.rpc)
+	return trapClosedConnErr(s.rpc.Serve(l))
+}
+
 // ServeMetrics provides a prometheus endpoint for exposing metrics
 func (s *Server) ServeMetrics(l net.Listener) error {
 	m := http.NewServeMux()
