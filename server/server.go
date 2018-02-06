@@ -1,7 +1,6 @@
 package server
 
 import (
-	"google.golang.org/grpc/health/grpc_health_v1"
 	"expvar"
 	"net"
 	"net/http"
@@ -13,6 +12,16 @@ import (
 	"github.com/boltdb/bolt"
 	metrics "github.com/docker/go-metrics"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	containers "github.com/llitfkitfk/containerd/api/services/containers/v1"
+	contentapi "github.com/llitfkitfk/containerd/api/services/content/v1"
+	diff "github.com/llitfkitfk/containerd/api/services/diff/v1"
+	eventsapi "github.com/llitfkitfk/containerd/api/services/events/v1"
+	images "github.com/llitfkitfk/containerd/api/services/images/v1"
+	introspection "github.com/llitfkitfk/containerd/api/services/introspection/v1"
+	leasesapi "github.com/llitfkitfk/containerd/api/services/leases/v1"
+	namespaces "github.com/llitfkitfk/containerd/api/services/namespaces/v1"
+	snapshotsapi "github.com/llitfkitfk/containerd/api/services/snapshots/v1"
+	tasks "github.com/llitfkitfk/containerd/api/services/tasks/v1"
 	version "github.com/llitfkitfk/containerd/api/services/version/v1"
 	"github.com/llitfkitfk/containerd/content"
 	"github.com/llitfkitfk/containerd/content/local"
@@ -24,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // New creates and initializes a new containerd server
@@ -218,10 +228,30 @@ func (s *Server) Stop() {
 func interceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	ctx = log.WithModule(ctx, "containerd")
 	switch info.Server.(type) {
+	case tasks.TasksServer:
+		ctx = log.WithModule(ctx, "tasks")
+	case containers.ContainersServer:
+		ctx = log.WithModule(ctx, "containers")
+	case contentapi.ContentServer:
+		ctx = log.WithModule(ctx, "content")
+	case images.ImagesServer:
+		ctx = log.WithModule(ctx, "images")
 	case grpc_health_v1.HealthServer:
 		// No need to change the context
 	case version.VersionServer:
 		ctx = log.WithModule(ctx, "version")
+	case snapshotsapi.SnapshotsServer:
+		ctx = log.WithModule(ctx, "snapshot")
+	case diff.DiffServer:
+		ctx = log.WithModule(ctx, "diff")
+	case namespaces.NamespacesServer:
+		ctx = log.WithModule(ctx, "namespaces")
+	case eventsapi.EventsServer:
+		ctx = log.WithModule(ctx, "events")
+	case introspection.IntrospectionServer:
+		ctx = log.WithModule(ctx, "introspection")
+	case leasesapi.LeasesServer:
+		ctx = log.WithModule(ctx, "leases")
 	default:
 		log.G(ctx).Warnf("unknown GRPC server type: %#v\n", info.Server)
 	}
