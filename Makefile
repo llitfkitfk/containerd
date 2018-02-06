@@ -21,7 +21,7 @@ PKG=github.com/llitfkitfk/containerd
 
 PACKAGES=$(shell go list ./... | grep -v /vendor/)
 
-COMMANDS=containerd sock2http
+COMMANDS=containerd sock2http client
 BINARIES=$(addprefix bin/,$(COMMANDS))
 
 GO_TAGS=$(if $(BUILDTAGS),-tags "$(BUILDTAGS)",)
@@ -51,6 +51,10 @@ bin/sock2http: cmd/sock2http FORCE # set !cgo
 	@echo "$(WHALE) bin/sock2http"
 	@CGO_ENABLED=0 go build -o bin/sock2http ./$<
 
+
+bin/client: cmd/client FORCE # set !cgo
+	@echo "$(WHALE) bin/client"
+	@CGO_ENABLED=0 go build -o bin/client ./$<
 
 
 binaries: $(BINARIES) ## build binaries

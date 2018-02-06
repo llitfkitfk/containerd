@@ -37,6 +37,8 @@ type Type string
 func (t Type) String() string { return string(t) }
 
 const (
+	// RuntimePlugin implements a runtime
+	RuntimePlugin Type = "io.containerd.runtime.v1"
 	// SnapshotPlugin implements a snapshotter
 	SnapshotPlugin Type = "io.containerd.snapshotter.v1"
 	// MetadataPlugin implements a metadata store

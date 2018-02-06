@@ -13,6 +13,7 @@ import (
 	"github.com/boltdb/bolt"
 	metrics "github.com/docker/go-metrics"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	version "github.com/llitfkitfk/containerd/api/services/version/v1"
 	"github.com/llitfkitfk/containerd/content"
 	"github.com/llitfkitfk/containerd/content/local"
 	"github.com/llitfkitfk/containerd/events/exchange"
