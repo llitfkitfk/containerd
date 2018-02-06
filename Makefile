@@ -1,6 +1,9 @@
 # Root directory of the project (absolute path).
 ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
+# Base path used to install.
+DESTDIR=/Users/llitfkitfk/Dropbox/Documents/go/src/github.com/llitfkitfk/containerd/local
+
 
 VERSION=$(shell git describe --match 'v[0-9]*' --dirty='.m' --always)
 REVISION=$(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
@@ -25,7 +28,7 @@ GO_TAGS=$(if $(BUILDTAGS),-tags "$(BUILDTAGS)",)
 GO_LDFLAGS=-ldflags '-s -w -X $(PKG)/version.Version=$(VERSION) -X $(PKG)/version.Revision=$(REVISION) -X $(PKG)/version.Package=$(PKG) $(EXTRA_LDFLAGS)'
 GO_GCFLAGS=
 
-.PHONY: clean vendor build binaries run http generate protos
+.PHONY: clean vendor build binaries run http setup generate protos
 
 all: binaries
 
@@ -65,7 +68,7 @@ setup: ## install dependencies
 	@go get -u github.com/alecthomas/gometalinter
 	@gometalinter --install
 	@go get -u github.com/stevvooe/protobuild
-	
+
 generate: protos
 	@echo "$(WHALE) $@"
 	@PATH=${ROOTDIR}/bin:${PATH} go generate -x ${PACKAGES}
@@ -73,3 +76,10 @@ generate: protos
 protos: bin/protoc-gen-gogoctrd ## generate protobuf
 	@echo "$(WHALE) $@"
 	@PATH=${ROOTDIR}/bin:${PATH} protobuild ${PACKAGES}
+
+
+
+install: ## install binaries
+	@echo "$(WHALE) $@ $(BINARIES)"
+	@mkdir -p $(DESTDIR)/bin
+	@install $(BINARIES) $(DESTDIR)/bin

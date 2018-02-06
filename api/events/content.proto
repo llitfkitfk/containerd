@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package containerd.events;
+
+import weak "gogoproto/gogo.proto";
+import weak "github.com/llitfkitfk/containerd/protobuf/plugin/fieldpath.proto";
+
+option go_package = "github.com/llitfkitfk/containerd/api/events;events";
+option (containerd.plugin.fieldpath_all) = true;
+
+message ContentDelete {
+	string digest = 1 [(gogoproto.customtype) = "github.com/opencontainers/go-digest.Digest", (gogoproto.nullable) = false];
+}
