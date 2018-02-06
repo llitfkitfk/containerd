@@ -1,3 +1,7 @@
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+
 VERSION=$(shell git describe --match 'v[0-9]*' --dirty='.m' --always)
 REVISION=$(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
 
@@ -21,7 +25,7 @@ GO_TAGS=$(if $(BUILDTAGS),-tags "$(BUILDTAGS)",)
 GO_LDFLAGS=-ldflags '-s -w -X $(PKG)/version.Version=$(VERSION) -X $(PKG)/version.Revision=$(REVISION) -X $(PKG)/version.Package=$(PKG) $(EXTRA_LDFLAGS)'
 GO_GCFLAGS=
 
-.PHONY: clean vendor build binaries run http
+.PHONY: clean vendor build binaries run http generate protos
 
 all: binaries
 
@@ -54,3 +58,18 @@ run: binaries
 
 sock2http:
 	@./bin/sock2http -h ./var/run/docker/containerd/docker-containerd-debug.sock
+
+setup: ## install dependencies
+	@echo "$(WHALE) $@"
+	# TODO(stevvooe): Install these from the vendor directory
+	@go get -u github.com/alecthomas/gometalinter
+	@gometalinter --install
+	@go get -u github.com/stevvooe/protobuild
+	
+generate: protos
+	@echo "$(WHALE) $@"
+	@PATH=${ROOTDIR}/bin:${PATH} go generate -x ${PACKAGES}
+
+protos: bin/protoc-gen-gogoctrd ## generate protobuf
+	@echo "$(WHALE) $@"
+	@PATH=${ROOTDIR}/bin:${PATH} protobuild ${PACKAGES}

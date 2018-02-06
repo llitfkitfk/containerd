@@ -1,6 +1,7 @@
 package server
 
 import (
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"expvar"
 	"net"
 	"net/http"
@@ -214,6 +215,15 @@ func (s *Server) Stop() {
 }
 
 func interceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	ctx = log.WithModule(ctx, "containerd")
+	switch info.Server.(type) {
+	case grpc_health_v1.HealthServer:
+		// No need to change the context
+	case version.VersionServer:
+		ctx = log.WithModule(ctx, "version")
+	default:
+		log.G(ctx).Warnf("unknown GRPC server type: %#v\n", info.Server)
+	}
 	return grpc_prometheus.UnaryServerInterceptor(ctx, req, info, handler)
 }
 

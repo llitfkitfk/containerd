@@ -12,7 +12,7 @@ oom_score = -500
   address = "./var/run/docker/containerd/docker-containerd-debug.sock"
   uid = 501
   gid = 20
-  level = "info"
+  level = "debug"
 
 [metrics]
   address = ":8085"
